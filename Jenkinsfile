@@ -1,36 +1,37 @@
 pipeline {
     agent any 
-    environment {
-    DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
-    }
-    stages { 
 
+    stages { 
         stage('Build docker image') {
             steps {  
-                sh ' docker build -t manikiran7/firstrepo:$BUILD_NUMBER .'
+                sh 'docker build -t manikiran7/firstrepo:$BUILD_NUMBER .'
             }
         }
-        stage('login to dockerhub') {
-            steps{
-                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
             }
         }
-        stage('push image') {
-            steps{
-                sh ' docker push manikiran7/firstrepo:$BUILD_NUMBER'
+
+        stage('Push image') {
+            steps {
+                sh 'docker push manikiran7/firstrepo:$BUILD_NUMBER'
             }
         }
-}
-post {
+    }
+
+    post {
         always {
             sh 'docker logout'
         }
-success {
-                slackSend message: "Build deployed successfully - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
-            }
-    failure {
-        slackSend message: "Build failed  - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+        success {
+            slackSend message: "✅ Build deployed successfully - ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+        }
+        failure {
+            slackSend message: "❌ Build failed - ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+        }
     }
-    }
-}
 }
