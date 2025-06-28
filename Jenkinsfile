@@ -1,13 +1,13 @@
 pipeline {
     agent any 
     environment {
-    DOCKERHUB_CREDENTIALS = credentials('s3cloudhub-dockerhub')
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
     }
     stages { 
 
         stage('Build docker image') {
             steps {  
-                sh ' docker build -t vatsraj/pythonapp:$BUILD_NUMBER .'
+                sh ' docker build -t manikiran7/firstrepo:$BUILD_NUMBER .'
             }
         }
         stage('login to dockerhub') {
@@ -17,7 +17,7 @@ pipeline {
         }
         stage('push image') {
             steps{
-                sh ' docker push vatsraj/pythonapp:$BUILD_NUMBER'
+                sh ' docker push manikiran7/firstrepo:$BUILD_NUMBER'
             }
         }
 }
